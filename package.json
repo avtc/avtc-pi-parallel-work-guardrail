@@ -1,6 +1,6 @@
 {
   "name": "avtc-pi-parallel-work-guardrail",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Lets you block or approve agent-called git operations that would disrupt parallel work — worktree-aware, with auto-decide after timeout.",
   "type": "module",
   "main": "./index.ts",
@@ -8,7 +8,7 @@
   "pi": {
     "extensions": [
       "./index.ts",
-      "node_modules/avtc-pi-ui-components/index.ts"
+      "../avtc-pi-ui-components/index.ts"
     ],
     "allowedCodeDeps": [
       "avtc-pi-logger",
@@ -27,8 +27,7 @@
     "test:unit": "node scripts/test-low-priority.cjs vitest run",
     "test": "node scripts/test-low-priority.cjs \"node scripts/run-parallel.cjs \"npm run lint:optional-params :: npm run lint:bare-literals :: npm run lint:design-refs :: npm run lint:as-never :: npm run lint:bundled-imports :: npm run lint :: npm run typecheck :: npm run knip :: npm run dupes\" && vitest run\"",
     "dupes": "jscpd src/ --exit-code --threshold 0.01",
-    "lint:as-never": "node scripts/no-as-never.cjs src/ tests/ index.ts",
-    "prepublishOnly": "node scripts/check-symlinks.mjs"
+    "lint:as-never": "node scripts/no-as-never.cjs src/ tests/ index.ts"
   },
   "keywords": [
     "pi-package",
@@ -65,9 +64,6 @@
     "assets/",
     "LICENSE",
     "README.md"
-  ],
-  "bundledDependencies": [
-    "avtc-pi-ui-components"
   ],
   "bundleDependencies": [
     "avtc-pi-ui-components"
