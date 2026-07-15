@@ -28,7 +28,7 @@ const GUARDRAIL_INSTRUCTION =
   "Do not use git operations that disrupt parallel work on the branch. " +
   "This includes: git stash (all variants), git checkout (all variants), " +
   "git restore (all variants), git switch (all variants), " +
-  "git reset --hard/--mixed, git rebase, git commit --amend, " +
+  "git reset --hard/--mixed, git rebase, git commit --amend only (plain git commit is allowed), " +
   "git push, git merge, git pull. " +
   "Do NOT work around these restrictions — working tree modifications by any means risk overwriting other agents' changes. " +
   "You may only use these operations when absolutely necessary or when the user explicitly requests them. " +
