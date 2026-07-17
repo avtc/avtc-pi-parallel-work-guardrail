@@ -1,6 +1,6 @@
 {
   "name": "avtc-pi-parallel-work-guardrail",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Lets you block or approve agent-called git operations that would disrupt parallel work — worktree-aware, with auto-decide after timeout.",
   "type": "module",
   "main": "./index.ts",
@@ -36,9 +36,9 @@
   "author": "avtc <tarasenkov@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "avtc-pi-logger": "^1.0.0",
-    "avtc-pi-settings-ui": "^1.0.0",
-    "avtc-pi-ui-components": "^1.0.0"
+    "avtc-pi-logger": "^1.0.3",
+    "avtc-pi-settings-ui": "^1.0.6",
+    "avtc-pi-ui-components": "^1.0.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
