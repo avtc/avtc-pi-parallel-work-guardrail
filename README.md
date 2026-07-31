@@ -14,6 +14,12 @@ The confirmation dialog for a disruptive operation (routed via `showSelectWithNo
 
 ![select with note confirmation](assets/images/select-with-note.png)
 
+## Installation
+
+```bash
+pi install npm:avtc-pi-parallel-work-guardrail
+```
+
 ## Categories
 
 | Category | Blocked commands | Relaxed in worktree? |
@@ -42,12 +48,6 @@ Settings are stored in `~/.pi/agent/avtc-pi-parallel-work-guardrail-settings.jso
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `parallelWorkGuardrail` | string | `"ask"` | Guardrail mode: `"off"` (skip all checks), `"ask"` (prompt user, waits indefinitely), `"block"` (auto-block every disruptive command), `"ask-allow-15m"` (prompt + auto-allow after 15m of no response), `"ask-block-15m"` (prompt + auto-block after 15m) |
-
-## Installation
-
-```bash
-pi install npm:avtc-pi-parallel-work-guardrail
-```
 
 ## Full suite
 
