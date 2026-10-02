@@ -276,3 +276,98 @@ describe("decomposeWithCwd", () => {
     expect(decomposeWithCwd("   ", baseCwd)).toEqual([]);
   });
 });
+
+describe("decompose — shell wrapper peeling (powershell-era)", () => {
+  test("peels powershell -Command payload (double-quoted)", () => {
+    expect(decompose('powershell -Command "git checkout main"')).toEqual(["git checkout main"]);
+  });
+
+  test("peels powershell.exe -Command payload (single-quoted)", () => {
+    expect(decompose("powershell.exe -Command 'git stash'")).toEqual(["git stash"]);
+  });
+
+  test("peels pwsh -c payload", () => {
+    expect(decompose("pwsh -c 'git push'")).toEqual(["git push"]);
+  });
+
+  test("tolerates powershell leading flags before -Command", () => {
+    expect(decompose('powershell -NoProfile -NonInteractive -Command "git stash"')).toEqual(["git stash"]);
+  });
+
+  test("peels compound payload inside powershell -Command", () => {
+    expect(decompose('powershell -Command "git status; git push"')).toEqual(["git status", "git push"]);
+  });
+
+  test("peels unquoted powershell -Command payload", () => {
+    expect(decompose("powershell -Command git restore src/index.ts")).toEqual(["git restore src/index.ts"]);
+  });
+
+  test("decodes powershell -EncodedCommand (base64 UTF-16LE)", () => {
+    const b64 = Buffer.from("git push", "utf16le").toString("base64");
+    expect(decompose(`powershell -EncodedCommand ${b64}`)).toEqual(["git push"]);
+  });
+
+  test("leaves powershell -File untouched (cannot inspect script)", () => {
+    expect(decompose("powershell -File script.ps1")).toEqual(["powershell -File script.ps1"]);
+  });
+
+  test("bare powershell without -Command stays intact", () => {
+    expect(decompose("powershell")).toEqual(["powershell"]);
+  });
+
+  test("peels cmd /c payload", () => {
+    expect(decompose('cmd /c "git checkout ."')).toEqual(["git checkout ."]);
+  });
+
+  test("peels cmd.exe /c payload", () => {
+    expect(decompose("cmd.exe /c git restore a.txt")).toEqual(["git restore a.txt"]);
+  });
+
+  test("peels bash -c payload", () => {
+    expect(decompose('bash -c "git stash"')).toEqual(["git stash"]);
+  });
+
+  test("peels bash -lc payload", () => {
+    expect(decompose("bash -lc 'git push'")).toEqual(["git push"]);
+  });
+
+  test("peels sh -c payload", () => {
+    expect(decompose("sh -c 'git switch feature'")).toEqual(["git switch feature"]);
+  });
+
+  test("peels nested wrappers", () => {
+    expect(decompose("bash -c \"powershell -Command 'git push'\"")).toEqual(["git push"]);
+  });
+
+  test("wrapper cd payload is cwd-tracked after peel", () => {
+    const subs = decomposeWithCwd('powershell -Command "cd ../other; git push"', "E:/base/cwd");
+    expect(subs).toEqual([{ command: "git push", effectiveCwd: "E:/base/other" }]);
+  });
+});
+
+describe("decompose — PowerShell Set-Location cwd tracking", () => {
+  test("extractCdTarget recognizes Set-Location", () => {
+    expect(extractCdTarget("Set-Location ../other")).toBe("../other");
+  });
+
+  test("extractCdTarget recognizes lowercase set-location", () => {
+    expect(extractCdTarget("set-location /e/work")).toBe("/e/work");
+  });
+
+  test("extractCdTarget recognizes Set-Location -Path", () => {
+    expect(extractCdTarget("Set-Location -Path ../other")).toBe("../other");
+  });
+
+  test("extractCdTarget recognizes chdir", () => {
+    expect(extractCdTarget("chdir ../other")).toBe("../other");
+  });
+
+  test("extractCdTarget returns null for non-cd command", () => {
+    expect(extractCdTarget("git status")).toBeNull();
+  });
+
+  test("decomposeWithCwd tracks Set-Location for subsequent git commands", () => {
+    const subs = decomposeWithCwd("Set-Location ../wt; git push", "E:/base");
+    expect(subs).toEqual([{ command: "git push", effectiveCwd: "E:/wt" }]);
+  });
+});

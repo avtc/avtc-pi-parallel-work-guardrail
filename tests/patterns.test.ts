@@ -522,3 +522,33 @@ describe("matchDisruptive — edge cases", () => {
     expect(matchDisruptive("   ", false)).toBeNull();
   });
 });
+
+describe("git.exe anchor normalization (Windows)", () => {
+  test("git.exe checkout matches branch-switch", () => {
+    expect(matchDisruptive("git.exe checkout main", false)?.categoryId).toBe("branch-switch");
+  });
+
+  test("git.exe checkout with -- matches checkout-restore", () => {
+    expect(matchDisruptive("git.exe checkout -- src/a.ts", false)?.categoryId).toBe("checkout-restore");
+  });
+
+  test("git.exe push matches push", () => {
+    expect(matchDisruptive("git.exe push origin main", false)?.categoryId).toBe("push");
+  });
+
+  test("git.exe reset --hard matches reset-hard", () => {
+    expect(matchDisruptive("git.exe reset --hard HEAD~1", false)?.categoryId).toBe("reset-hard");
+  });
+
+  test("git.exe stash list is not disruptive", () => {
+    expect(matchDisruptive("git.exe stash list", false)).toBeNull();
+  });
+
+  test("git.exe stash push matches stash", () => {
+    expect(matchDisruptive("git.exe stash push", false)?.categoryId).toBe("stash");
+  });
+
+  test("bare git still matches after normalize change", () => {
+    expect(matchDisruptive("git push", false)?.categoryId).toBe("push");
+  });
+});

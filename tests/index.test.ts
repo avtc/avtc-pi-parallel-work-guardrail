@@ -954,3 +954,115 @@ describe("extension lifecycle", () => {
     ).toBeNull();
   });
 });
+
+describe("powershell tool coverage (pi 0.84.3+)", () => {
+  // Same cleanup as the main describe: hooks are describe-scoped, and without
+  // this the WIRED_KEY idempotency guard short-circuits every test after the first.
+  afterEach(async () => {
+    _whitelistChecks.length = 0;
+    delete process.env.PI_SETTINGS_PARALLEL_WORK_GUARDRAIL;
+    _resetExtensionState();
+    _resetGetGuardrailSettings();
+    vi.restoreAllMocks();
+    const mockLog = await getMockLogger();
+    mockLog.info.mockClear();
+    mockLog.warn.mockClear();
+    mockLog.error.mockClear();
+    mockLog.debug.mockClear();
+    mockLog.child.mockClear();
+  });
+
+  test("block mode blocks disruptive powershell command", async () => {
+    const { handlers } = setupExtension("block");
+    const handler = getFirstHandler(handlers, "tool_call");
+    const result = await handler(
+      { toolName: "powershell", input: { command: "git checkout ." }, toolCallId: "1" },
+      { hasUI: true, cwd: process.cwd() },
+    );
+    expect(result).toEqual({ block: true, reason: expect.stringContaining("Switch") });
+  });
+
+  test("block mode blocks disruptive powershell command with PS separators", async () => {
+    const { handlers } = setupExtension("block");
+    const handler = getFirstHandler(handlers, "tool_call");
+    const result = await handler(
+      { toolName: "powershell", input: { command: "git status; git stash; git status" }, toolCallId: "1" },
+      { hasUI: true, cwd: process.cwd() },
+    );
+    expect(result).toEqual({ block: true, reason: expect.stringContaining("Stash") });
+  });
+
+  test("block mode allows safe powershell command", async () => {
+    const { handlers } = setupExtension("block");
+    const handler = getFirstHandler(handlers, "tool_call");
+    const result = await handler(
+      { toolName: "powershell", input: { command: "Get-ChildItem -Recurse -Filter *.ts" }, toolCallId: "1" },
+      { hasUI: true, cwd: process.cwd() },
+    );
+    expect(result).toBeUndefined();
+  });
+
+  test("block mode blocks git wrapped in powershell -Command from bash tool", async () => {
+    const { handlers } = setupExtension("block");
+    const handler = getFirstHandler(handlers, "tool_call");
+    const result = await handler(
+      { toolName: "bash", input: { command: 'powershell -Command "git push"' }, toolCallId: "1" },
+      { hasUI: true, cwd: process.cwd() },
+    );
+    expect(result).toEqual({ block: true, reason: expect.stringContaining("Push") });
+  });
+
+  test("block mode blocks git wrapped in bash -c from powershell tool", async () => {
+    const { handlers } = setupExtension("block");
+    const handler = getFirstHandler(handlers, "tool_call");
+    const result = await handler(
+      { toolName: "powershell", input: { command: "bash -c 'git stash'" }, toolCallId: "1" },
+      { hasUI: true, cwd: process.cwd() },
+    );
+    expect(result).toEqual({ block: true, reason: expect.stringContaining("Stash") });
+  });
+
+  test("ask mode with hasUI=false blocks powershell command with reason", async () => {
+    const { handlers } = setupExtension("ask");
+    const handler = getFirstHandler(handlers, "tool_call");
+    const result = await handler(
+      { toolName: "powershell", input: { command: "git switch other" }, toolCallId: "1" },
+      { hasUI: false, cwd: process.cwd() },
+    );
+    expect(result).toEqual({ block: true, reason: expect.stringContaining("Switch") });
+  });
+
+  test("tool_result delivers user note for allowed powershell command", async () => {
+    const spy = vi
+      .spyOn(selectWithNoteModule, "showSelectWithNote")
+      .mockResolvedValue({ value: "allow", note: "go ahead" });
+    const { handlers } = setupExtension("ask");
+    const callHandler = getFirstHandler(handlers, "tool_call");
+    await callHandler(
+      { toolName: "powershell", input: { command: "git push" }, toolCallId: "42" },
+      { hasUI: true, cwd: process.cwd() },
+    );
+    const resultHandler = getFirstHandler(handlers, "tool_result");
+    const result = await resultHandler(
+      { toolName: "powershell", toolCallId: "42", content: [{ type: "text", text: "done" }] },
+      { cwd: process.cwd() },
+    );
+    expect(result).toEqual({
+      content: [
+        { type: "text", text: "[User note: go ahead]\n" },
+        { type: "text", text: "done" },
+      ],
+    });
+    spy.mockRestore();
+  });
+
+  test("non-shell tool is ignored by tool_call handler", async () => {
+    const { handlers } = setupExtension("block");
+    const handler = getFirstHandler(handlers, "tool_call");
+    const result = await handler(
+      { toolName: "read", input: { path: "x" }, toolCallId: "1" },
+      { hasUI: true, cwd: process.cwd() },
+    );
+    expect(result).toBeUndefined();
+  });
+});

@@ -150,9 +150,13 @@ const CATEGORIES: DisruptiveCategory[] = [
   },
 ];
 
-/** Normalize a subcommand for matching: collapse whitespace, strip leading/trailing. */
+/** Normalize a subcommand for matching: collapse whitespace, strip leading/trailing,
+ *  and fold Windows-style `git.exe` to `git` so ^git-anchored patterns match it. */
 function normalize(cmd: string): string {
-  return cmd.trim().replace(/\s+/g, " ");
+  return cmd
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/^git\.exe\b/i, "git");
 }
 
 /**

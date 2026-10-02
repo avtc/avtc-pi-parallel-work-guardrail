@@ -48,6 +48,15 @@ type GlobalWithWired = typeof globalThis & { [WIRED_KEY]?: boolean };
 export const _whitelistChecks: GuardrailWhitelistCheck[] = [];
 
 // ---------------------------------------------------------------------------
+// Shell tools — every tool whose input carries a shell command string.
+// bash (all platforms) + powershell (pi ≥ 0.84.3, Windows-oriented).
+// The guard logic itself (decompose/patterns) is shell-agnostic: it parses the
+// command string, so PowerShell syntax flows through the same checks.
+// ---------------------------------------------------------------------------
+
+const SHELL_TOOLS = new Set(["bash", "powershell"]);
+
+// ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
 
@@ -141,10 +150,10 @@ export default function guardrailExtension(pi: ExtensionAPI): void {
     }),
   );
 
-  // --- tool_call: intercept bash commands ---
+  // --- tool_call: intercept shell commands (bash + powershell) ---
   _state.unsubs.push(
     safeOn(pi, "tool_call", async (event: ToolCallEvent, ctx: ExtensionCommandContext) => {
-      if (event.toolName !== "bash") return;
+      if (!SHELL_TOOLS.has(event.toolName)) return;
 
       const mode = getMode();
       if (mode === "off") return;
@@ -164,7 +173,7 @@ export default function guardrailExtension(pi: ExtensionAPI): void {
   // --- tool_result: deliver user notes for allowed commands ---
   _state.unsubs.push(
     safeOn(pi, "tool_result", async (event: ToolResultEvent) => {
-      if (event.toolName !== "bash") return;
+      if (!SHELL_TOOLS.has(event.toolName)) return;
       const note = pendingNotes.get(event.toolCallId);
       if (!note) return;
       pendingNotes.delete(event.toolCallId);

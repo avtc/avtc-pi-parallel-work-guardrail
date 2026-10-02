@@ -30,6 +30,8 @@ const GUARDRAIL_INSTRUCTION =
   "git restore (all variants), git switch (all variants), " +
   "git reset --hard/--mixed, git rebase, git commit --amend only (plain git commit is allowed), " +
   "git push, git merge, git pull. " +
+  "This applies equally to the bash and powershell tools — wrapping commands " +
+  "(powershell -Command, bash -c, cmd /c, …) does not bypass interception. " +
   "Do NOT work around these restrictions — working tree modifications by any means risk overwriting other agents' changes. " +
   "You may only use these operations when absolutely necessary or when the user explicitly requests them. " +
   "The user will decide whether to allow or block each attempt.";
