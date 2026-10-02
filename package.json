@@ -1,6 +1,6 @@
 {
   "name": "avtc-pi-parallel-work-guardrail",
-  "version": "1.0.10",
+  "version": "1.1.0",
   "description": "Lets you block or approve agent-called git operations that would disrupt parallel work — worktree-aware, with auto-decide after timeout.",
   "type": "module",
   "main": "./index.ts",
