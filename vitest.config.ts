@@ -8,5 +8,6 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     isolate: false,
     setupFiles: ["tests/setup.ts"],
+    globalSetup: ["./scripts/teardown-test-logs.mjs"],
   },
 });
